@@ -1363,6 +1363,23 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
 .share-store-btn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 @media(max-width:600px){.detail-share-row{margin-top:12px}.share-store-btn{min-height:32px;padding:5px 9px;font-size:11px}}
 </style>
+
+<style id="compartilhamento-loja">
+.share-modal-backdrop{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:18px;background:rgba(12,25,20,.62);backdrop-filter:blur(5px)}
+.share-modal{position:relative;width:min(100%,430px);padding:25px 22px 20px;border:1px solid #e5ddcf;border-radius:18px;background:#fffdf8;color:#252b27;box-shadow:0 22px 70px #0005}
+.share-modal-close{position:absolute;top:10px;right:12px;width:34px;height:34px;border:0;border-radius:50%;background:#f0eee7;color:#39463e;font-size:25px;cursor:pointer}
+.share-modal-kicker{display:block;margin:0 35px 8px 0;color:#2b7664;font-size:9px;font-weight:800;letter-spacing:1.5px}
+.share-modal h3{margin:0 35px 6px 0;font-size:21px;line-height:1.2;overflow-wrap:anywhere}
+.share-modal p{margin:0 0 18px;color:#69736c;font-size:13px}
+.share-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.share-option{min-width:0;min-height:82px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;border:1px solid #e5ddcf;border-radius:12px;background:#fff;color:#34443a;text-decoration:none;font:inherit;cursor:pointer}
+.share-option>span{width:32px;height:32px;display:grid;place-items:center;border-radius:10px;background:#f1f4ef;font-size:21px;font-weight:800}
+.share-option b{font-size:11px}
+.share-option.whatsapp>span{background:#e4f5e9;color:#168348}.share-option.facebook>span{background:#e8efff;color:#1877f2}.share-option.instagram>span{background:#fbe9f1;color:#c13584}.share-option.google>span{background:#fcece8;color:#4285f4}.share-option.telegram>span{background:#e5f3fa;color:#229ed9}.share-option.copy>span{background:#efeee8;color:#42564b}
+.share-modal-note{display:block;margin-top:15px;color:#69736c;font-size:11px;line-height:1.5}
+@media(max-width:360px){.share-modal{padding:22px 14px 16px}.share-options{gap:7px}.share-option{min-height:74px}.share-option b{font-size:10px}}
+</style>
+
 </head><body><div id="app"><div class="msg">Carregando portal…</div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>
 const SUPABASE_URL='https://hgvojvbxuxgpcehrkgsj.supabase.co';
@@ -1526,59 +1543,58 @@ async function compartilharLoja(id){
  const loja=lojas.find(x=>String(x.id)===String(id));
  if(!loja)return;
 
- // Endereço direto da página pública desta loja.
+ // Um endereço file:// ou localhost não pode ser aberto por outras pessoas.
+ const protocoloLocal=location.protocol==='file:' || location.hostname==='localhost' || location.hostname==='127.0.0.1';
+ if(protocoloLocal){
+  alert('Para compartilhar esta loja com outras pessoas, primeiro publique o Portal de Vendas Jaguar em um endereço público (HTTPS). O arquivo aberto diretamente no computador gera um link local que só funciona no seu dispositivo.');
+  return;
+ }
+
  const url=location.origin+location.pathname+location.search+'#loja-'+encodeURIComponent(loja.id);
- const dados={
-  title:loja.nome+' | Portal de Vendas Jaguar',
-  text:'Conheça '+loja.nome+' no Portal de Vendas Jaguar.',
-  url
- };
+ const titulo=loja.nome+' | Portal de Vendas Jaguar';
+ const texto='Conheça '+loja.nome+' no Portal de Vendas Jaguar: '+url;
+ const encUrl=encodeURIComponent(url);
+ const encTexto=encodeURIComponent(texto);
+ const encTitulo=encodeURIComponent(titulo);
 
- async function copiarLink(){
-  if(navigator.clipboard&&window.isSecureContext){
-   await navigator.clipboard.writeText(url);
-   alert('Link da loja copiado! Agora é só compartilhar.');
-   return;
+ const modal=document.createElement('div');
+ modal.className='share-modal-backdrop';
+ modal.setAttribute('role','dialog');
+ modal.setAttribute('aria-modal','true');
+ modal.setAttribute('aria-label','Compartilhar página da loja');
+ modal.innerHTML=`
+  <section class="share-modal">
+   <button type="button" class="share-modal-close" aria-label="Fechar" onclick="this.closest('.share-modal-backdrop').remove()">×</button>
+   <span class="share-modal-kicker">DIVULGUE ESTE ESTABELECIMENTO</span>
+   <h3>Compartilhar ${esc(loja.nome)}</h3>
+   <p>Escolha onde deseja divulgar esta página.</p>
+   <div class="share-options">
+    <a class="share-option whatsapp" href="https://wa.me/?text=${encTexto}" target="_blank" rel="noopener noreferrer"><span>◉</span><b>WhatsApp</b></a>
+    <a class="share-option facebook" href="https://www.facebook.com/sharer/sharer.php?u=${encUrl}" target="_blank" rel="noopener noreferrer"><span>f</span><b>Facebook</b></a>
+    <button type="button" class="share-option instagram" onclick="copiarLinkCompartilhamento('${encodeURIComponent(url)}','Instagram')"><span>◎</span><b>Instagram</b></button>
+    <a class="share-option google" href="https://www.google.com/search?q=${encodeURIComponent(loja.nome+' Jaguaruana')}" target="_blank" rel="noopener noreferrer"><span>G</span><b>Google</b></a>
+    <a class="share-option telegram" href="https://t.me/share/url?url=${encUrl}&text=${encTitulo}" target="_blank" rel="noopener noreferrer"><span>➤</span><b>Telegram</b></a>
+    <button type="button" class="share-option copy" onclick="copiarLinkCompartilhamento('${encodeURIComponent(url)}','')"><span>▢</span><b>Copiar link</b></button>
+   </div>
+   <small class="share-modal-note">No Instagram, copie o link e cole nos Stories, na bio ou em uma mensagem.</small>
+  </section>`;
+ modal.addEventListener('click',e=>{if(e.target===modal)modal.remove()});
+ document.addEventListener('keydown',function fecharShare(e){if(e.key==='Escape'){modal.remove();document.removeEventListener('keydown',fecharShare)}});
+ document.body.appendChild(modal);
+}
+async function copiarLinkCompartilhamento(linkCodificado,plataforma){
+ const url=decodeURIComponent(linkCodificado);
+ try{
+  if(navigator.clipboard&&window.isSecureContext)await navigator.clipboard.writeText(url);
+  else{
+   const campo=document.createElement('textarea');campo.value=url;campo.setAttribute('readonly','');
+   campo.style.position='fixed';campo.style.opacity='0';document.body.appendChild(campo);
+   campo.select();campo.setSelectionRange(0,campo.value.length);
+   const ok=document.execCommand('copy');campo.remove();
+   if(!ok)throw new Error('Falha ao copiar');
   }
-
-  // Alternativa para navegadores sem acesso à Clipboard API.
-  const campo=document.createElement('textarea');
-  campo.value=url;
-  campo.setAttribute('readonly','');
-  campo.style.position='fixed';
-  campo.style.opacity='0';
-  campo.style.pointerEvents='none';
-  document.body.appendChild(campo);
-  campo.select();
-  campo.setSelectionRange(0,campo.value.length);
-  let copiou=false;
-  try{copiou=document.execCommand('copy')}catch(error){copiou=false}
-  campo.remove();
-
-  if(copiou){
-   alert('Link da loja copiado! Agora é só compartilhar.');
-   return;
-  }
-  window.prompt('Copie o link desta loja:',url);
- }
-
- if(navigator.share){
-  try{
-   if(!navigator.canShare||navigator.canShare(dados)){
-    await navigator.share(dados);
-    return;
-   }
-  }catch(error){
-   if(error?.name==='AbortError')return;
-   console.warn('Compartilhamento nativo indisponível; usando cópia do link.',error);
-  }
- }
-
- try{await copiarLink()}
- catch(error){
-  console.error('Não foi possível copiar o link da loja:',error);
-  window.prompt('Copie o link desta loja:',url);
- }
+  alert(plataforma?'Link copiado! Agora cole no Instagram.':'Link da loja copiado!');
+ }catch(error){window.prompt('Copie o link desta loja:',url)}
 }
 async function atualizarEstatisticasPublicas(id){const {data,error}=await sb.rpc('estatisticas_publicas_lojas',{p_loja_id:id});if(error){console.error('Não foi possível carregar os indicadores públicos:',error);const a=document.getElementById('loja-acessos'),c=document.getElementById('loja-conversas');if(a)a.textContent='Erro';if(c)c.textContent='Erro';return}const item=Array.isArray(data)?data[0]:data;if(!item){const a=document.getElementById('loja-acessos'),c=document.getElementById('loja-conversas');if(a)a.textContent='0';if(c)c.textContent='0';return}const acessos=document.getElementById('loja-acessos');const conversas=document.getElementById('loja-conversas');if(acessos)acessos.textContent=Number(item.acessos||0).toLocaleString('pt-BR');if(conversas)conversas.textContent=Number(item.conversas||0).toLocaleString('pt-BR')}
 async function abrirWhatsApp(event,id,phone){event.preventDefault();event.stopPropagation();await registrar(id,'conversa');window.open('https://wa.me/55'+phone,'_blank','noopener');return false}
