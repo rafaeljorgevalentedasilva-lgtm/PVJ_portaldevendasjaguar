@@ -1356,6 +1356,13 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
 }
 </style>
 
+<style>
+.detail-share-row{display:flex;justify-content:flex-end;margin-top:14px}
+.share-store-btn{display:inline-flex;align-items:center;gap:7px;min-height:34px;padding:6px 10px;border:1px solid var(--bd);border-radius:8px;background:transparent;color:var(--mu);font-size:12px;font-weight:600;cursor:pointer;transition:background .15s,border-color .15s,color .15s}
+.share-store-btn:hover{background:var(--bg);border-color:#9aafa3;color:#24584d}
+.share-store-btn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+@media(max-width:600px){.detail-share-row{margin-top:12px}.share-store-btn{min-height:32px;padding:5px 9px;font-size:11px}}
+</style>
 </head><body><div id="app"><div class="msg">Carregando portal…</div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>
 const SUPABASE_URL='https://hgvojvbxuxgpcehrkgsj.supabase.co';
@@ -1504,7 +1511,7 @@ function teclasGaleria(event){
  if(event.key==='ArrowLeft')moverFotoGaleria(-1);
 }
 
-function detail(id){let l=lojas.find(x=>String(x.id)===String(id));if(!l){home();return}let phone=digits(l.wpp);let mapsUrl=l.end?'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(l.end):'';let instagram=String(l.insta||'').trim();let instagramUrl=instagram?( /^https?:\/\//i.test(instagram)?instagram:'https://www.instagram.com/'+instagram.replace(/^@/,'').replace(/^\/+|\/+$/g,'')+'/' ):'';ratingDraft=null;app.innerHTML=`<div class="pg"><div class="w"><div class="ban" style="${l.banner?`background-image:url('${esc(l.banner)}')`:''}"><button class="back" onclick="go('')">← Voltar</button></div><div class="cols"><main><div class="box detail-intro"><div class="detail-kicker"><span></span> CONHEÇA ESTE ESTABELECIMENTO</div><h2>${esc(l.nome)}</h2><p>${esc(l.desc||"Conheça os produtos e serviços deste estabelecimento.")}</p></div>${l.produtos_servicos.length?`<section class="payment-section products-section"><h4>Produtos e serviços</h4><div class="payment-chips">${l.produtos_servicos.map(item=>`<span class="payment-chip"><span aria-hidden="true">✓</span>${esc(item)}</span>`).join('')}</div></section>`:''}${l.formas_pagamento.length?`<section class="payment-section"><h4>Formas de pagamento</h4><div class="payment-chips">${l.formas_pagamento.map(item=>`<span class="payment-chip"><span aria-hidden="true">✓</span>${esc(item)}</span>`).join('')}</div></section>`:''}<div class="box rating-box-compact" id="rating-box"><h3>Avalie esta loja</h3><div class="rating-current"><strong>${(ratingStats[l.id]?.media||0).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}</strong> <span class="stars-display">${'★'.repeat(Math.round(ratingStats[l.id]?.media||0))}${'☆'.repeat(5-Math.round(ratingStats[l.id]?.media||0))}</span><small>${ratingStats[l.id]?.total||0} avaliação(ões)</small></div><div class="rate-row"><div class="rate-actions"><button type="button" class="rate-zero" data-nota="0" aria-pressed="false" onclick="selecionarNota(0)" aria-label="Selecionar zero">0</button>${[1,2,3,4,5].map(n=>`<button type="button" class="rate-star" data-nota="${n}" aria-pressed="false" aria-label="Selecionar ${n} estrela(s)" onclick="selecionarNota(${n})">★</button>`).join('')}</div><button type="button" class="btn s rating-save" onclick="avaliarLoja(${l.id})">Salvar avaliação</button></div><small id="rating-status" class="rating-status">${ratingLoadError?'Não foi possível carregar as avaliações. Execute o SQL atualizado no Supabase.': 'Escolha sua nota; ela só será registrada ao clicar em Salvar avaliação.'}</small></div><div class="box"><h3>Galeria</h3><div class="gal">${l.galeria.map((u,i)=>`<button type="button" class="gal-item" onclick="abrirFotoGaleria(${i})" aria-label="Ampliar foto ${i+1}"><img src="${esc(u)}" alt="Foto ${i+1} de ${esc(l.nome)}" loading="lazy"><span class="gal-zoom" aria-hidden="true">⌕</span></button>`).join('')||'<p>Esta loja ainda não possui fotos adicionais.</p>'}</div>
+function detail(id){let l=lojas.find(x=>String(x.id)===String(id));if(!l){home();return}let phone=digits(l.wpp);let mapsUrl=l.end?'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(l.end):'';let instagram=String(l.insta||'').trim();let instagramUrl=instagram?( /^https?:\/\//i.test(instagram)?instagram:'https://www.instagram.com/'+instagram.replace(/^@/,'').replace(/^\/+|\/+$/g,'')+'/' ):'';ratingDraft=null;app.innerHTML=`<div class="pg"><div class="w"><div class="ban" style="${l.banner?`background-image:url('${esc(l.banner)}')`:''}"><button class="back" onclick="go('')">← Voltar</button></div><div class="cols"><main><div class="box detail-intro"><div class="detail-kicker"><span></span> CONHEÇA ESTE ESTABELECIMENTO</div><h2>${esc(l.nome)}</h2><p>${esc(l.desc||"Conheça os produtos e serviços deste estabelecimento.")}</p><div class="detail-share-row"><button type="button" class="share-store-btn" onclick="compartilharLoja(${l.id})" aria-label="Compartilhar ${esc(l.nome)}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><path d="m8.7 10.7 6.6-4.4M8.7 13.3l6.6 4.4"></path></svg><span>Compartilhar</span></button></div></div>${l.produtos_servicos.length?`<section class="payment-section products-section"><h4>Produtos e serviços</h4><div class="payment-chips">${l.produtos_servicos.map(item=>`<span class="payment-chip"><span aria-hidden="true">✓</span>${esc(item)}</span>`).join('')}</div></section>`:''}${l.formas_pagamento.length?`<section class="payment-section"><h4>Formas de pagamento</h4><div class="payment-chips">${l.formas_pagamento.map(item=>`<span class="payment-chip"><span aria-hidden="true">✓</span>${esc(item)}</span>`).join('')}</div></section>`:''}<div class="box rating-box-compact" id="rating-box"><h3>Avalie esta loja</h3><div class="rating-current"><strong>${(ratingStats[l.id]?.media||0).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}</strong> <span class="stars-display">${'★'.repeat(Math.round(ratingStats[l.id]?.media||0))}${'☆'.repeat(5-Math.round(ratingStats[l.id]?.media||0))}</span><small>${ratingStats[l.id]?.total||0} avaliação(ões)</small></div><div class="rate-row"><div class="rate-actions"><button type="button" class="rate-zero" data-nota="0" aria-pressed="false" onclick="selecionarNota(0)" aria-label="Selecionar zero">0</button>${[1,2,3,4,5].map(n=>`<button type="button" class="rate-star" data-nota="${n}" aria-pressed="false" aria-label="Selecionar ${n} estrela(s)" onclick="selecionarNota(${n})">★</button>`).join('')}</div><button type="button" class="btn s rating-save" onclick="avaliarLoja(${l.id})">Salvar avaliação</button></div><small id="rating-status" class="rating-status">${ratingLoadError?'Não foi possível carregar as avaliações. Execute o SQL atualizado no Supabase.': 'Escolha sua nota; ela só será registrada ao clicar em Salvar avaliação.'}</small></div><div class="box"><h3>Galeria</h3><div class="gal">${l.galeria.map((u,i)=>`<button type="button" class="gal-item" onclick="abrirFotoGaleria(${i})" aria-label="Ampliar foto ${i+1}"><img src="${esc(u)}" alt="Foto ${i+1} de ${esc(l.nome)}" loading="lazy"><span class="gal-zoom" aria-hidden="true">⌕</span></button>`).join('')||'<p>Esta loja ainda não possui fotos adicionais.</p>'}</div>
 <div class="gallery-viewer" id="gallery-viewer" aria-hidden="true" onclick="fecharFotoGaleria(event)">
  <button type="button" class="gallery-close" onclick="fecharFotoGaleria(event)" aria-label="Fechar visualização">×</button>
  <button type="button" class="gallery-nav gallery-prev" onclick="moverFotoGaleria(-1,event)" aria-label="Foto anterior">‹</button>
@@ -1515,6 +1522,64 @@ function detail(id){let l=lojas.find(x=>String(x.id)===String(id));if(!l){home()
  <button type="button" class="gallery-nav gallery-next" onclick="moverFotoGaleria(1,event)" aria-label="Próxima foto">›</button>
  <div class="gallery-counter" id="gallery-viewer-counter"></div>
 </div></div></main><aside><div class="box"><h3>Informações de contato</h3>${l.end?`<a class="contact-link" href="${esc(mapsUrl)}" target="_blank" rel="noopener noreferrer"><span class="ci">📍</span><span><b>Endereço</b>${esc(l.end)}<br><span style="color:#15803d">Abrir no Google Maps ↗</span></span></a>`:''}${l.horario?horarioMarkup(l.horario):''}${instagramUrl?`<a class="contact-link" href="${esc(instagramUrl)}" target="_blank" rel="noopener noreferrer"><span class="ci">◎</span><span><b>Instagram oficial</b>${esc(instagram)}<br><span style="color:#15803d">Abrir perfil ↗</span></span></a>`:''}<a class="wa" href="https://wa.me/55${phone}" onclick="return abrirWhatsApp(event,${l.id},'${phone}')">Conversar pelo WhatsApp</a></div></aside></div></div></div>`;registrar(Number(id),'visita').catch(e=>console.error('Falha ao registrar visita:',e));}
+async function compartilharLoja(id){
+ const loja=lojas.find(x=>String(x.id)===String(id));
+ if(!loja)return;
+
+ // Endereço direto da página pública desta loja.
+ const url=location.origin+location.pathname+location.search+'#loja-'+encodeURIComponent(loja.id);
+ const dados={
+  title:loja.nome+' | Portal de Vendas Jaguar',
+  text:'Conheça '+loja.nome+' no Portal de Vendas Jaguar.',
+  url
+ };
+
+ async function copiarLink(){
+  if(navigator.clipboard&&window.isSecureContext){
+   await navigator.clipboard.writeText(url);
+   alert('Link da loja copiado! Agora é só compartilhar.');
+   return;
+  }
+
+  // Alternativa para navegadores sem acesso à Clipboard API.
+  const campo=document.createElement('textarea');
+  campo.value=url;
+  campo.setAttribute('readonly','');
+  campo.style.position='fixed';
+  campo.style.opacity='0';
+  campo.style.pointerEvents='none';
+  document.body.appendChild(campo);
+  campo.select();
+  campo.setSelectionRange(0,campo.value.length);
+  let copiou=false;
+  try{copiou=document.execCommand('copy')}catch(error){copiou=false}
+  campo.remove();
+
+  if(copiou){
+   alert('Link da loja copiado! Agora é só compartilhar.');
+   return;
+  }
+  window.prompt('Copie o link desta loja:',url);
+ }
+
+ if(navigator.share){
+  try{
+   if(!navigator.canShare||navigator.canShare(dados)){
+    await navigator.share(dados);
+    return;
+   }
+  }catch(error){
+   if(error?.name==='AbortError')return;
+   console.warn('Compartilhamento nativo indisponível; usando cópia do link.',error);
+  }
+ }
+
+ try{await copiarLink()}
+ catch(error){
+  console.error('Não foi possível copiar o link da loja:',error);
+  window.prompt('Copie o link desta loja:',url);
+ }
+}
 async function atualizarEstatisticasPublicas(id){const {data,error}=await sb.rpc('estatisticas_publicas_lojas',{p_loja_id:id});if(error){console.error('Não foi possível carregar os indicadores públicos:',error);const a=document.getElementById('loja-acessos'),c=document.getElementById('loja-conversas');if(a)a.textContent='Erro';if(c)c.textContent='Erro';return}const item=Array.isArray(data)?data[0]:data;if(!item){const a=document.getElementById('loja-acessos'),c=document.getElementById('loja-conversas');if(a)a.textContent='0';if(c)c.textContent='0';return}const acessos=document.getElementById('loja-acessos');const conversas=document.getElementById('loja-conversas');if(acessos)acessos.textContent=Number(item.acessos||0).toLocaleString('pt-BR');if(conversas)conversas.textContent=Number(item.conversas||0).toLocaleString('pt-BR')}
 async function abrirWhatsApp(event,id,phone){event.preventDefault();event.stopPropagation();await registrar(id,'conversa');window.open('https://wa.me/55'+phone,'_blank','noopener');return false}
 async function registrar(id,tipo){let key='pvj_visitante';let v=localStorage.getItem(key);if(!v){v=crypto.randomUUID();localStorage.setItem(key,v)}let hash=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(v)).then(b=>[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join(''));const {error}=await sb.rpc('registrar_evento_loja',{p_loja_id:id,p_tipo:tipo,p_visitante_hash:hash});if(error)throw error;}
