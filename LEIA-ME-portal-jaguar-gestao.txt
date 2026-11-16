@@ -1,0 +1,17 @@
+PORTAL DE VENDAS JAGUAR — GESTÃO INTEGRADA
+
+ARQUIVOS
+- portal-vendas-jaguar-gestao-integrada.html: página principal do portal.
+- gerenciamento-assinaturas-portal.html: painel completo de gestão de assinaturas, sem a aba Detalhes dos planos.
+- portal-jaguar-planos-publicos.sql: SQL complementar para consulta pública dos preços dos planos.
+- bd-portal-jaguar-atualizado.sql: banco SQL original atualizado com o complemento de preços públicos.
+
+INSTALAÇÃO
+1. Publique os dois arquivos HTML na mesma pasta/domínio.
+2. Mantenha a pasta assets do portal junto com o HTML principal (ela contém ícones e imagens usados pelo portal).
+3. No painel administrativo do portal, clique em “Gerenciar assinaturas”.
+4. A tela de gestão usa a mesma configuração Supabase e o login administrativo já autorizado. Para compartilhar a sessão, mantenha os dois arquivos no mesmo domínio/origem.
+5. Se ainda não executou o complemento SQL, execute portal-jaguar-planos-publicos.sql no SQL Editor do Supabase. Não execute o banco completo sobre uma instalação já existente sem revisar as migrações.
+
+OBSERVAÇÃO
+A gestão de assinaturas permanece em uma página HTML separada para preservar todas as funções do painel completo. O botão “Voltar ao painel do portal” retorna à página anterior.
