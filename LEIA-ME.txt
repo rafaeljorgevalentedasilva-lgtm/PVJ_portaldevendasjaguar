@@ -1,31 +1,47 @@
-# Portal de Vendas Jaguar — pacote de otimização inicial
+# Portal de Vendas Jaguar — paginação real no Supabase
 
-## Conteúdo
-- `index.html`: portal principal com a imagem grande da marca extraída para arquivo WebP e leitura do catálogo em blocos de 500 registros.
-- `assets/portal-brand.webp`: marca otimizada para a página inicial.
-- `assets/favicon.png` e `assets/favicon-192.png`: ícones gerados a partir da arte incorporada no HTML enviado.
-- `painel-assinaturas-comprovante-marca-dagua.html`: painel de assinaturas, com leitura em blocos.
-- `gerenciamento-assinaturas-portal.html`: gerenciamento de assinaturas, com leitura em blocos.
-- `supabase-seguranca-desempenho.sql`: migração complementar com índices e redução de privilégios anônimos.
+## Arquivos do pacote
+- `index.html`: portal público e painel administrativo de lojas atualizados.
+- `gerenciamento-assinaturas-portal.html`: painel de gerenciamento de assinaturas.
+- `painel-assinaturas-comprovante-marca-dagua.html`: painel de assinaturas/comprovantes.
+- `assets/`: marca e favicons usados pelo portal.
+- `supabase-paginacao-servidor.sql`: nova migração obrigatória para a paginação do catálogo e indicadores por página.
+- `supabase-seguranca-desempenho.sql`: migração complementar da etapa anterior; não execute novamente se já foi aplicada.
 
-## Publicação
+## O que mudou nesta etapa
+
+### Catálogo público
+- O navegador solicita somente 8 estabelecimentos por página.
+- Busca por nome/trecho de categoria, categoria selecionada e plano são processados no Supabase.
+- A ordenação VIP, teste, avaliações e nome é feita no banco antes da paginação.
+- A resposta traz os dados de avaliação e plano somente dos estabelecimentos daquela página.
+- A página de detalhes busca o registro pelo ID quando ele não está no conjunto já carregado.
+- Pesquisas rápidas usam um pequeno atraso e descartam respostas antigas, evitando que uma consulta lenta substitua uma busca mais recente.
+
+### Painel administrativo de lojas
+- Lista 20 lojas por página diretamente do Supabase.
+- Pesquisa pelo nome no banco, sem carregar todos os cadastros.
+- Indicadores de visitas e conversas são consultados somente para as lojas da página atual.
+- O formulário busca o registro completo apenas quando o administrador abre uma loja para editar.
+
+## Instalação
+
 1. Faça backup dos arquivos atuais e do banco Supabase.
-2. Envie `index.html`, os dois painéis e a pasta `assets` juntos para a mesma pasta do site/domínio.
-3. Mantenha os nomes dos dois painéis exatamente como estão, pois o portal os referencia por esses nomes.
-4. Revise o SQL e execute no SQL Editor do Supabase.
-5. Teste em janela anônima: catálogo, filtros, detalhes, imagens, avaliações e botões de contato.
-6. Entre como administrador e teste criar/editar/excluir loja, categorias e operações de assinatura.
+2. No Supabase, abra **SQL Editor** e execute `supabase-paginacao-servidor.sql`.
+3. A migração pressupõe que já exista a função `public.assinaturas_publicas_lojas()` usada pela versão anterior do portal, retornando `loja_id` e `modo_assinatura`.
+4. Se você ainda não aplicou `supabase-seguranca-desempenho.sql`, revise-o separadamente antes de decidir aplicá-lo. Não execute novamente migrações já aplicadas.
+5. Publique `index.html`, os dois painéis e a pasta `assets` juntos, mantendo os nomes e caminhos.
+6. Limpe o cache do navegador (Ctrl+F5) e teste em uma janela anônima e na sessão administrativa.
 
-## O que foi otimizado
-- O HTML principal deixa de carregar uma imagem PNG de aproximadamente 1,85 MB em Base64. A marca agora é um WebP separado, com cerca de 180 KB.
-- Os arquivos principais usam consultas em blocos de 500 registros com ordenação estável, evitando truncamento silencioso no limite padrão de linhas da API.
-- O SQL adiciona índices para lojas ativas, categorias, eventos e avaliações.
-- O papel `anon` perde permissões diretas de escrita nas tabelas de lojas e categorias; continua podendo ler o catálogo permitido pela RLS.
-- O bucket `fotos_lojas` recebe limite de 5 MB e tipos MIME de imagem JPEG, PNG e WebP.
+## Testes após publicar
+- Catálogo: primeira página, próxima/anterior, busca por nome, busca por categoria, filtro de plano e detalhes de uma loja que não esteja na página inicial.
+- Administração: abrir painel, pesquisar uma loja, navegar páginas, editar uma loja de outra página, criar e excluir cadastro.
+- Indicadores: conferir acessos e conversas exibidos para cada página administrativa.
+- Avaliações: abrir uma loja, registrar avaliação e conferir a média atualizada.
 
-## Limitações que ainda precisam ser resolvidas no Supabase
-Este pacote é uma melhoria inicial segura, mas não é correto prometer escalabilidade ilimitada ou segurança completa apenas com HTML/JS. O portal ainda carrega o conjunto de lojas para o navegador e filtra/ordena localmente. Para crescimento real, a próxima etapa é migrar busca, filtros, ordenação e paginação para consultas no servidor (RPC/view com paginação e índices adequados), carregando somente os 8 resultados da página atual e buscando detalhes por ID.
-
-O SQL enviado anteriormente não define as tabelas `assinaturas_lojas` e `historico_assinaturas`, nem suas políticas RLS. Portanto, a segurança dessas tabelas não pode ser certificada neste pacote. Também é necessário conferir no painel Supabase se existem políticas RLS antigas e permissivas, principalmente em tabelas de assinaturas, histórico e Storage.
-
-A chave `sb_publishable` presente no HTML é pública por natureza; nunca coloque `service_role` ou outra chave secreta no navegador. A proteção deve estar nas permissões SQL, RLS e funções RPC.
+## Limitações e transparência
+- O filtro **Aberto agora / Fechado agora** continua sendo aplicado no conjunto de 8 lojas da página atual, pois o formato dos horários cadastrados ainda não foi normalizado para uma consulta confiável no banco. Busca, categoria e plano são filtrados no servidor.
+- Os dois painéis separados de assinaturas ainda carregam a lista de lojas/assinaturas em memória. A paginação real desta entrega cobre o catálogo público e a lista de lojas do painel administrativo principal; esses painéis de assinaturas podem receber uma etapa própria depois de confirmar o esquema real das tabelas `assinaturas_lojas` e `historico_assinaturas`.
+- A execução do SQL e o comportamento real das consultas precisam ser confirmados no seu projeto Supabase. Os arquivos foram verificados localmente, mas não tenho acesso para executar consultas no banco de produção.
+- A segurança das tabelas `assinaturas_lojas` e `historico_assinaturas` depende das políticas RLS existentes no seu Supabase. O SQL fornecido anteriormente não continha a definição completa dessas tabelas.
+- A chave `sb_publishable` no HTML é pública por natureza. Nunca coloque `service_role` ou outra chave secreta no navegador. A proteção depende de RLS, permissões SQL e funções RPC.

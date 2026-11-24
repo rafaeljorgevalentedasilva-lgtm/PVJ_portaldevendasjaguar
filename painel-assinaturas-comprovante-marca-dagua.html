@@ -404,7 +404,7 @@ async function fetchAllRows(queryFactory,batchSize=500){const rows=[];for(let fr
 async function loadStores(){
  $('status').textContent='Carregando estabelecimentos do Supabase...';$('status').className='statusline';
  try{
-  stores=await fetchAllRows(()=>sb.from('Lojas').select('*').order('id',{ascending:true}));
+  stores=await fetchAllRows(()=>sb.from('Lojas').select('id,nome,telefone_whatsapp').order('id',{ascending:true}));
   await refreshAuthAndPlans();
   $('status').textContent=`${stores.length} loja(s) carregada(s). ${isAdmin?'Assinaturas sincronizadas com o Supabase.':'Entre como administrador para visualizar e gerenciar assinaturas.'}`;
   $('status').className='statusline '+(isAdmin?'success':'');
@@ -421,7 +421,6 @@ async function refreshAuthAndPlans(){
  if(!isAdmin)return;
  const data=await fetchAllRows(()=>sb.from('assinaturas_lojas').select('*').order('loja_id'));
  data.forEach(row=>{plans[String(row.loja_id)]=fromDb(row)});
-  historyRows=await fetchAllRows(()=>sb.from('historico_assinaturas').select('*').order('criado_em',{ascending:false}));
 }
 function updateAuthUi(){
  $('authLabel').textContent=currentUser?(isAdmin?'● Administrador conectado':'● Usuário sem permissão'):'● Supabase conectado';
@@ -456,11 +455,12 @@ function extendTest(id){
  if(!isAdmin)return;const st=stores.find(x=>String(x.id)===String(id)),p=plans[String(id)];if(!st||!p||p.mode!=='test')return;
  $('extendTestStoreId').value=id;$('extendTestStore').textContent=`${storeName(st)} • Loja #${id} • Fim atual: ${fmt(p.end)}`;$('extendDays').value='7';$('extendReason').value='';$('extendTestDialog').showModal();
 }
-function showHistory(id){
+async function showHistory(id){
  const st=stores.find(x=>String(x.id)===String(id));if(!st)return;$('historyStore').textContent=`${storeName(st)} • Loja #${id}`;
- const rows=historyRows.filter(x=>String(x.loja_id)===String(id));
+ $('historyList').innerHTML='<div class="empty">Carregando histórico…</div>';$('historyDialog').showModal();
+ try{const {data,error}=await sb.from('historico_assinaturas').select('*').eq('loja_id',Number(id)).order('criado_em',{ascending:false}).limit(100);if(error)throw error;const rows=data||[];
  $('historyList').innerHTML=rows.length?rows.map(x=>`<div class="history-item"><strong>${esc(x.descricao||x.tipo_evento)}</strong><small>${fmt((x.data_referencia||x.criado_em?.slice(0,10)))}${x.valor!=null?' • R$ '+Number(x.valor).toFixed(2).replace('.',','):''}${x.forma_pagamento?' • '+esc(x.forma_pagamento):''}</small></div>`).join(''):'<div class="empty">Nenhum registro no histórico ainda.</div>';
- $('historyDialog').showModal();
+ }catch(error){$('historyList').innerHTML=`<div class="empty">Não foi possível carregar o histórico: ${esc(error.message||error)}</div>`}
 }
 $('paymentForm').addEventListener('submit',async e=>{
  e.preventDefault();if(!isAdmin)return;const id=$('paymentStoreId').value,p=plans[id];if(!p||p.mode!=='vip')return;
@@ -565,7 +565,7 @@ function setTab(tab){currentTab=tab;currentPage=1;document.querySelectorAll('.ta
 document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>setTab(b.dataset.tab)));
 $('search').addEventListener('input',()=>{currentPage=1;render()});$('reloadBtn').addEventListener('click',loadStores);$('exportBtn').addEventListener('click',exportCsv);
 $('authBtn').addEventListener('click',async()=>{
- if(currentUser){await sb.auth.signOut();await loadStores();return}
+ if(currentUser){await sb.auth.signOut();return}
  $('authError').textContent='';$('authDialog').showModal();
 });
 $('cancelAuth').onclick=()=>$('authDialog').close();
@@ -573,7 +573,7 @@ $('authForm').addEventListener('submit',async e=>{
  e.preventDefault();$('authError').textContent='Verificando acesso...';
  const {error}=await sb.auth.signInWithPassword({email:$('authEmail').value.trim(),password:$('authPassword').value});
  if(error){$('authError').textContent='Não foi possível entrar: '+error.message;return}
- $('authDialog').close();$('authPassword').value='';await loadStores();
+ $('authDialog').close();$('authPassword').value='';
 });
 $('cancelPlan').onclick=()=>$('planDialog').close();
 $('planForm').addEventListener('submit',async e=>{
@@ -598,7 +598,7 @@ $('planForm').addEventListener('submit',async e=>{
  }catch(err){alert('Não foi possível salvar a assinatura: '+err.message)}
  finally{submit.disabled=false;submit.textContent='Salvar no Supabase'}
 });
-sb.auth.onAuthStateChange(()=>{setTimeout(()=>loadStores(),0)});
+sb.auth.onAuthStateChange((event)=>{if(event==='SIGNED_IN'||event==='SIGNED_OUT')setTimeout(()=>loadStores(),0)});
 loadStores();
 </script>
 </body>
