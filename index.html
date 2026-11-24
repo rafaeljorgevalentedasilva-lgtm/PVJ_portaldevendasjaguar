@@ -1510,7 +1510,7 @@ async function init(){const paginaInicial=new URLSearchParams(location.search).g
 sb.auth.onAuthStateChange((_event,session)=>{user=session?.user||null;adminCheckUserId=null;adminCheckResult=false;if(document.getElementById('app')){const h=decodeURIComponent(location.hash.slice(1));if(!h||h==='login')render()}});
 addEventListener('hashchange',render);
 function render(){const h=decodeURIComponent(location.hash.slice(1));if(h==='login')return login();if(h==='admin')return admin();if(h==='novo')return form(null);if(h.startsWith('edit-'))return form(h.slice(5));if(h.startsWith('loja-'))return detail(h.slice(5));home();}
-function planosPage(){app.innerHTML=`<header class="municipal-header"><div class="utility-bar"><div class="header-width utility-inner"><span>Portal de Vendas Jaguar <i>•</i> Jaguaruana – Ceará</span><span class="utility-motto">Valorize o comércio da nossa terra</span></div></div><div class="brand-band"><div class="header-width brand-inner"><div class="brand-art"><span>PORTAL DE VENDAS</span><b>JAGUARUANA • TERRA DA REDE</b></div><button class="admin-link" onclick="location.href=location.pathname">Voltar à página inicial</button></div></div></header><main style="min-height:65vh;padding:12px 0 30px;background:#f7f6f1"><section class="plans-public" id="planos"><div class="plans-public-head"><div class="plans-public-kicker">Conheça nossas modalidades</div><h2>Seu negócio merece mais visibilidade</h2><p>Escolha como começar: experimente o Portal Jaguar gratuitamente ou entre direto com o plano VIP e aproveite todos os recursos.</p></div><div class="plans-public-grid"><article class="public-plan-card"><div class="public-plan-top"><div class="public-plan-eyebrow">Comece sem compromisso</div><h3>Teste gratuito</h3><p>Conheça a vitrine digital do Portal Jaguar por 30 dias.</p><div class="public-plan-price">R$ 0,00 <small>/ 30 dias</small></div></div><div class="public-plan-body"><h4>Você terá acesso a:</h4><ul class="public-plan-benefits"><li><span class="public-plan-check">✓</span><span><strong>30 dias para experimentar</strong><br>Conheça a plataforma e monte sua presença digital.</span></li><li><span class="public-plan-check">✓</span><span><strong>Até 2 formas de pagamento</strong><br>Informe aos clientes como podem pagar.</span></li><li><span class="public-plan-check">✓</span><span><strong>Até 5 produtos ou serviços</strong><br>Apresente os principais itens do seu negócio.</span></li><li><span class="public-plan-check">✓</span><span><strong>Até 3 fotos na galeria</strong><br>Mostre um pouco do seu estabelecimento.</span></li><li><span class="public-plan-check">✓</span><span><strong>1 divulgação mensal</strong><br>Compartilhamento da sua loja no Instagram oficial do Portal.</span></li></ul></div><div class="public-plan-note"><strong>Ideal para:</strong> quem quer conhecer o Portal Jaguar e experimentar sua vitrine digital antes de contratar.</div></article><article class="public-plan-card vip"><div class="public-plan-top"><div class="public-plan-eyebrow">Experiência completa</div><h3>VIP</h3><p>Mais liberdade para apresentar seu negócio e ampliar sua divulgação.</p><div class="public-plan-price" id="public-vip-normal-price">R$ 20,00 <small>/ 30 dias</small></div><div class="public-plan-alt"><strong>Contratação direta promocional:</strong> <span id="public-vip-promo-price">R$ 18,00</span> por 30 dias · <span id="public-vip-discount">10% de desconto</span>. Sem precisar passar pelo teste gratuito.</div></div><div class="public-plan-body"><h4>Todos os benefícios do VIP:</h4><ul class="public-plan-benefits"><li><span class="public-plan-check">✓</span><span><strong>Uso ilimitado do Portal</strong><br>Mais espaço para apresentar seu negócio.</span></li><li><span class="public-plan-check">✓</span><span><strong>Pagamentos sem limite</strong><br>Cadastre todas as formas de pagamento aceitas.</span></li><li><span class="public-plan-check">✓</span><span><strong>Produtos e serviços ilimitados</strong><br>Exiba seu catálogo completo.</span></li><li><span class="public-plan-check">✓</span><span><strong>Galeria de fotos ilimitada</strong><br>Valorize seu estabelecimento com mais imagens.</span></li><li><span class="public-plan-check">✓</span><span><strong>Grupo VIP de divulgação</strong><br>Divulgação semanal e mensal da página no Instagram do Portal.</span></li><li><span class="public-plan-check">✓</span><span><strong>Destaque nas ações de divulgação</strong><br>Mais evidência nas iniciativas promocionais do Portal.</span></li></ul></div><div class="public-plan-note"><strong>Escolha como contratar:</strong> VIP regular ou VIP promocional de contratação direta — os dois incluem os mesmos benefícios e são válidos por 30 dias.</div></article></div><section class="universal-benefit" aria-labelledby="universal-benefit-title"><div class="universal-benefit-icon" aria-hidden="true">🪧</div><div class="universal-benefit-content"><span class="universal-benefit-label">Benefício universal do Portal Jaguar</span><h3 id="universal-benefit-title">Uma plaquinha física para divulgar seu negócio</h3><p>Todas as lojas cadastradas no Portal Jaguar ganham uma plaquinha física personalizada de divulgação da sua página no Portal, com QR Code que leva diretamente à página da loja. O benefício é válido para todas as lojas, independentemente do plano.</p><ul><li>✓ Plaquinha personalizada</li><li>✓ QR Code para sua página</li><li>✓ Todas as lojas cadastradas recebem a plaquinha física</li></ul></div></section><div class="public-plans-cta"><a href="#planos">Planos e benefícios do Portal Jaguar</a></div></section></main><footer class="site-footer" id="rodape"><div class="footer-simple"><strong>Gostou do Portal e quer fazer parte? Entre em contato conosco.</strong><div class="footer-simple-links"><a href="https://instagram.com/portaldevendasjaguar" target="_blank" rel="noopener">@portaldevendasjaguar</a><a href="mailto:portaldevendasjaguar@gmail.com">portaldevendasjaguar@gmail.com</a></div><small>© ${new Date().getFullYear()} Portal de Vendas Jaguar · Jaguaruana, Ceará</small></div></footer>`;loadPublicVipSettings();} 
+function planosPage(){app.innerHTML=`<header class="municipal-header"><div class="utility-bar"><div class="header-width utility-inner"><span>Portal de Vendas Jaguar <i>•</i> Jaguaruana – Ceará</span><span class="utility-motto">Valorize o comércio da nossa terra</span></div></div><div class="brand-band"><div class="header-width brand-inner"><div class="brand-lockup brand-lockup-banner"><img src="assets/portal-brand.webp" decoding="async" fetchpriority="high" alt="Portal de Vendas Jaguar com o mascote Jaguinho"></div><div class="brand-art"><span>JAGUARUANA</span><b>TERRA DA REDE</b></div><button class="admin-link" onclick="location.href=location.pathname">Voltar à página inicial</button></div></div></header><main class="plans-page"><section class="plans-public" id="planos"><div class="plans-public-head"><div class="plans-public-kicker">Conheça nossas modalidades</div><h2>Seu negócio merece mais visibilidade</h2><p>Escolha como começar: experimente o Portal Jaguar gratuitamente ou entre direto com o plano VIP e aproveite todos os recursos.</p></div><div class="plans-public-grid"><article class="public-plan-card"><div class="public-plan-top"><div class="public-plan-eyebrow">Comece sem compromisso</div><h3>Teste gratuito</h3><p>Conheça a vitrine digital do Portal Jaguar por 30 dias.</p><div class="public-plan-price">R$ 0,00 <small>/ 30 dias</small></div></div><div class="public-plan-body"><h4>Você terá acesso a:</h4><ul class="public-plan-benefits"><li><span class="public-plan-check">✓</span><span><strong>30 dias para experimentar</strong><br>Conheça a plataforma e monte sua presença digital.</span></li><li><span class="public-plan-check">✓</span><span><strong>Até 2 formas de pagamento</strong><br>Informe aos clientes como podem pagar.</span></li><li><span class="public-plan-check">✓</span><span><strong>Até 5 produtos ou serviços</strong><br>Apresente os principais itens do seu negócio.</span></li><li><span class="public-plan-check">✓</span><span><strong>Até 3 fotos na galeria</strong><br>Mostre um pouco do seu estabelecimento.</span></li><li><span class="public-plan-check">✓</span><span><strong>1 divulgação mensal</strong><br>Compartilhamento da sua loja no Instagram oficial do Portal.</span></li></ul></div><div class="public-plan-note"><strong>Ideal para:</strong> quem quer conhecer o Portal Jaguar e experimentar sua vitrine digital antes de contratar.</div></article><article class="public-plan-card vip"><div class="public-plan-top"><div class="public-plan-eyebrow">Experiência completa</div><h3>VIP</h3><p>Mais liberdade para apresentar seu negócio e ampliar sua divulgação.</p><div class="public-plan-price" id="public-vip-normal-price">R$ 20,00 <small>/ 30 dias</small></div><div class="public-plan-alt"><strong>Contratação direta promocional:</strong> <span id="public-vip-promo-price">R$ 18,00</span> por 30 dias · <span id="public-vip-discount">10% de desconto</span>. Sem precisar passar pelo teste gratuito.</div></div><div class="public-plan-body"><h4>Todos os benefícios do VIP:</h4><ul class="public-plan-benefits"><li><span class="public-plan-check">✓</span><span><strong>Uso ilimitado do Portal</strong><br>Mais espaço para apresentar seu negócio.</span></li><li><span class="public-plan-check">✓</span><span><strong>Pagamentos sem limite</strong><br>Cadastre todas as formas de pagamento aceitas.</span></li><li><span class="public-plan-check">✓</span><span><strong>Produtos e serviços ilimitados</strong><br>Exiba seu catálogo completo.</span></li><li><span class="public-plan-check">✓</span><span><strong>Galeria de fotos ilimitada</strong><br>Valorize seu estabelecimento com mais imagens.</span></li><li><span class="public-plan-check">✓</span><span><strong>Grupo VIP de divulgação</strong><br>Divulgação semanal e mensal da página no Instagram do Portal.</span></li><li><span class="public-plan-check">✓</span><span><strong>Destaque nas ações de divulgação</strong><br>Mais evidência nas iniciativas promocionais do Portal.</span></li></ul></div><div class="public-plan-note"><strong>Escolha como contratar:</strong> VIP regular ou VIP promocional de contratação direta — os dois incluem os mesmos benefícios e são válidos por 30 dias.</div></article></div><section class="universal-benefit" aria-labelledby="universal-benefit-title"><div class="universal-benefit-icon" aria-hidden="true">🪧</div><div class="universal-benefit-content"><span class="universal-benefit-label">Benefício universal do Portal Jaguar</span><h3 id="universal-benefit-title">Uma plaquinha física para divulgar seu negócio</h3><p>Todas as lojas cadastradas no Portal Jaguar ganham uma plaquinha física personalizada de divulgação da sua página no Portal, com QR Code que leva diretamente à página da loja. O benefício é válido para todas as lojas, independentemente do plano.</p><ul><li>✓ Plaquinha personalizada</li><li>✓ QR Code para sua página</li><li>✓ Todas as lojas cadastradas recebem a plaquinha física</li></ul></div></section><div class="public-plans-cta"><a href="#planos">Planos e benefícios do Portal Jaguar</a></div></section></main><footer class="site-footer" id="rodape"><div class="footer-simple"><strong>Gostou do Portal e quer fazer parte? Entre em contato conosco.</strong><div class="footer-simple-links"><a href="https://instagram.com/portaldevendasjaguar" target="_blank" rel="noopener">@portaldevendasjaguar</a><a href="mailto:portaldevendasjaguar@gmail.com">portaldevendasjaguar@gmail.com</a></div><small>© ${new Date().getFullYear()} Portal de Vendas Jaguar · Jaguaruana, Ceará</small></div></footer>`;loadPublicVipSettings();} 
 function home(){catalogPage=1;app.innerHTML=`<header class="municipal-header" id="inicio"><div class="utility-bar"><div class="header-width utility-inner"><span>Portal de Vendas Jaguar <i>•</i> Jaguaruana – Ceará</span><span class="utility-motto">Valorize o comércio da nossa terra</span></div></div><div class="brand-band"><div class="header-width brand-inner"><div class="brand-lockup brand-lockup-banner"><img src="assets/portal-brand.webp" decoding="async" fetchpriority="high" alt="Portal de Vendas Jaguar com o mascote Jaguinho"></div><div class="brand-art"><span>JAGUARUANA</span><b>TERRA DA REDE</b><img src="assets/carnauba.svg" alt=""></div><button class="admin-link" onclick="planosPage()">Detalhes dos planos</button>${user?`<button class="admin-link" onclick="go('admin')">Painel administrativo</button><button class="admin-link" onclick="sair()">Sair</button>`:`<button class="admin-link" onclick="go('login')">Área administrativa</button>`}</div></div></header><section class="welcome-hero"><div class="welcome-shade"></div><div class="welcome-content"><div class="welcome-label"><span></span> CONHEÇA O COMÉRCIO LOCAL</div><h1>O melhor da nossa terra,<br>em um só lugar.</h1><p>Descubra lojas, serviços e empreendedores de Jaguaruana. Valorize quem faz nossa cidade crescer.</p><div class="bar"><input id="q" placeholder="Buscar estabelecimento…" oninput="filterCards()"><select id="cat" onchange="filterCards()"><option value="">Todas as categorias</option>${cats.map(c=>`<option>${esc(c.nome)}</option>`).join('')}</select><select id="plan" onchange="filterCards()" aria-label="Filtrar por tipo de assinatura"><option value="">Todos os planos</option><option value="vip">👑 Assinatura VIP</option><option value="teste">✳ Plano grátis (teste)</option><option value="sem">Sem assinatura</option></select><select id="status" onchange="filterCards()" aria-label="Filtrar por funcionamento"><option value="">Todos os status</option><option value="aberto">Aberto agora</option><option value="fechado">Fechado agora</option></select></div></div><div class="welcome-signature">CARNAÚBA <span>×</span> TRADIÇÃO <span>×</span> EMPREENDEDORISMO</div></section><section class="sec w" id="estabelecimentos"><div class="sh"><div><h2>Estabelecimentos</h2><p>Conheça as opções disponíveis</p></div></div><div class="grid" id="cards"></div><div id="pagination" class="pagination"></div><small id="catalog-filter-note" class="file-hint" aria-live="polite"></small></section><footer class="site-footer" id="rodape"><div class="footer-simple"><strong>Gostou do Portal e quer fazer parte? Entre em contato conosco.</strong><div class="footer-simple-links"><a href="https://instagram.com/portaldevendasjaguar" target="_blank" rel="noopener">@portaldevendasjaguar</a><a href="mailto:portaldevendasjaguar@gmail.com">portaldevendasjaguar@gmail.com</a></div><small>© ${new Date().getFullYear()} Portal de Vendas Jaguar · Jaguaruana, Ceará</small></div></footer>`;loadCatalogPage(1);}
 
 // Interpreta horários escritos em linguagem natural simples, sem chamadas externas.
@@ -1811,3 +1811,114 @@ init();
 </style>
 
 <style>/* Rodapé principal compacto */ .site-footer#rodape{margin-top:20px;padding:14px 16px 12px;background:#16483d;color:#eaf2ec}.site-footer#rodape:before,.site-footer#rodape:after{display:none}.footer-simple{max-width:1000px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:8px 16px;flex-wrap:wrap}.footer-simple strong{font-size:12px;letter-spacing:.3px}.footer-simple-links{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:11px}.footer-simple a{color:#eaf2ec;text-decoration:none}.footer-simple a:hover{text-decoration:underline}.footer-simple small{font-size:10px;color:#c8d8cf}@media(max-width:600px){.footer-simple{justify-content:center;text-align:center;flex-direction:column;gap:7px}}</style>
+
+<style id="planos-dinamicos-tema-responsivo">
+/* Página de planos: mesma paleta adaptativa da página principal. */
+.plans-page{
+  min-height:65vh!important;
+  padding:clamp(16px,3vw,30px) 0 34px!important;
+  background:var(--bg)!important;
+  color:var(--tx)!important;
+  transition:background-color .18s ease,color .18s ease;
+}
+.plans-page .plans-public{
+  width:min(1080px,calc(100% - 32px))!important;
+  margin:clamp(18px,3vw,34px) auto 38px!important;
+}
+.plans-page .plans-public-head{max-width:740px;margin:0 auto 26px}
+.plans-page .plans-public-kicker{color:#b77935}
+.plans-page .plans-public-head h2{color:var(--tx)!important;font-size:clamp(24px,3.5vw,34px);line-height:1.18}
+.plans-page .plans-public-head p{color:var(--mu)!important;font-size:clamp(13px,1.4vw,14px);line-height:1.65}
+.plans-page .plans-public-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:clamp(12px,2vw,20px);
+  align-items:stretch;
+}
+.plans-page .public-plan-card{
+  min-width:0;
+  background:var(--card)!important;
+  color:var(--tx)!important;
+  border:1px solid var(--bd)!important;
+  border-radius:18px;
+  box-shadow:0 8px 26px var(--shadow-color,rgba(35,45,38,.09))!important;
+}
+.plans-page .public-plan-card.vip{border:1.5px solid #b98a4c!important}
+.plans-page .public-plan-top{
+  background:linear-gradient(135deg,var(--surface-soft,var(--bg)),var(--card))!important;
+  border-bottom:1px solid var(--bd)!important;
+  padding:clamp(17px,2.3vw,23px)!important;
+}
+.plans-page .public-plan-card.vip .public-plan-top{
+  background:linear-gradient(135deg,var(--accent-soft,var(--surface-soft,var(--bg))),var(--card))!important;
+}
+.plans-page .public-plan-eyebrow{color:#b77935}
+.plans-page .public-plan-top h3{color:var(--tx)!important;font-size:clamp(21px,2.3vw,25px)}
+.plans-page .public-plan-top p{color:var(--mu)!important;font-size:13px;line-height:1.55}
+.plans-page .public-plan-price{color:var(--tx)!important;font-size:clamp(26px,3vw,31px)}
+.plans-page .public-plan-price small{color:var(--mu)!important}
+.plans-page .public-plan-alt{
+  background:var(--surface-soft,var(--bg))!important;
+  border:1px solid var(--bd);
+  color:var(--tx)!important;
+  line-height:1.55;
+}
+.plans-page .public-plan-body{padding:clamp(15px,2vw,22px)!important}
+.plans-page .public-plan-body h4{color:var(--tx)!important}
+.plans-page .public-plan-benefits li{color:var(--mu)!important;font-size:clamp(11px,1.15vw,12px);line-height:1.55}
+.plans-page .public-plan-benefits li strong{color:var(--tx)}
+.plans-page .public-plan-check{background:var(--accent-soft,#e8efe9)!important;color:#27805f!important;flex:0 0 20px;width:20px;height:20px}
+.plans-page .public-plan-note{
+  background:var(--surface-soft,var(--bg))!important;
+  border-top:1px solid var(--bd)!important;
+  color:var(--mu)!important;
+  padding:clamp(12px,1.8vw,16px) clamp(15px,2vw,23px)!important;
+}
+.plans-page .public-plan-note strong{color:var(--tx)}
+.plans-page .universal-benefit{
+  display:flex;gap:18px;align-items:flex-start;
+  margin:22px auto 0;padding:clamp(16px,2.4vw,24px);
+  width:100%;min-width:0;
+  border:1px solid var(--bd)!important;
+  border-left:5px solid #b77935!important;
+  border-radius:14px;
+  background:var(--card)!important;
+  color:var(--tx)!important;
+  box-shadow:0 6px 18px var(--shadow-color,rgba(54,48,36,.07))!important;
+}
+.plans-page .universal-benefit-icon{background:var(--accent-soft,var(--surface-soft))!important}
+.plans-page .universal-benefit-content,
+.plans-page .universal-benefit-content li{color:var(--mu)!important}
+.plans-page .universal-benefit-label{color:#b77935}
+.plans-page .universal-benefit-content h3{color:var(--tx)!important}
+.plans-page .universal-benefit-content p{color:var(--mu)!important}
+.plans-page .public-plans-cta a{min-height:44px;padding:11px 20px;border-radius:9px;font-size:12px}
+.plans-page + .site-footer{margin-top:0}
+@media(max-width:760px){
+  .plans-page .plans-public{width:calc(100% - 26px)!important;margin:18px auto 26px!important}
+  .plans-page .plans-public-grid{grid-template-columns:minmax(0,1fr);gap:14px}
+  .plans-page .plans-public-head{margin-bottom:18px}
+  .plans-page .public-plan-card{border-radius:15px}
+  .plans-page .universal-benefit{gap:12px;margin-top:16px}
+}
+@media(max-width:430px){
+  .plans-page{padding-top:12px!important}
+  .plans-page .plans-public{width:calc(100% - 20px)!important}
+  .plans-page .plans-public-head h2{font-size:25px}
+  .plans-page .public-plan-top{padding:17px 15px!important}
+  .plans-page .public-plan-body{padding:15px!important}
+  .plans-page .public-plan-benefits{gap:10px}
+  .plans-page .public-plan-benefits li{font-size:11px}
+  .plans-page .universal-benefit{display:block;padding:15px}
+  .plans-page .universal-benefit-icon{margin-bottom:10px}
+  .plans-page .universal-benefit-content h3{font-size:19px}
+  .plans-page .public-plans-cta a{width:100%;text-align:center}
+}
+@media(prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .plans-page .public-plan-card.vip{border-color:#b98a4c!important}
+  :root:not([data-theme="light"]) .plans-page .public-plan-check{background:#294235!important;color:#a9dfbf!important}
+}
+:root[data-theme="dark"] .plans-page .public-plan-check{background:#294235!important;color:#a9dfbf!important}
+@media(prefers-reduced-motion:reduce){.plans-page *{transition:none!important;scroll-behavior:auto!important}}
+</style>
+
