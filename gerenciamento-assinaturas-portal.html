@@ -24,7 +24,7 @@ button.secondary{background:#fff;color:#35425b;border:1px solid #dce2ec}button.s
 .tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.search{width:min(300px,100%);padding:9px 12px;border:1px solid #dce2ec;border-radius:8px;font:inherit;outline:none;background:#fff}.search:focus,input:focus,select:focus{border-color:#8da5ff;box-shadow:0 0 0 3px #315eea18}
 .table-wrap{overflow:auto}table{width:100%;border-collapse:separate;border-spacing:0;min-width:790px}th{text-align:left;color:#7a8498;font-size:10px;text-transform:uppercase;letter-spacing:.65px;padding:12px 13px;background:#f8f9fc;border-bottom:1px solid var(--line);white-space:nowrap;position:sticky;top:0;z-index:1}td{padding:12px 13px;border-bottom:1px solid #edf0f5;vertical-align:middle;background:#fff}tbody tr:nth-child(even) td{background:#fcfdff}tbody tr:hover td{background:#f4f7ff}tbody tr:last-child td{border-bottom:0}.store{font-weight:780;color:#202c43}.muted{color:var(--muted);font-size:12px}.id{font-variant-numeric:tabular-nums;color:#7b8599;font-size:12px}
 select,input{font:inherit;border:1px solid #dce2ec;border-radius:8px;padding:8px 9px;background:#fff;color:var(--ink);max-width:100%}.mode{min-width:138px;font-size:12px;padding:8px}.badge{display:inline-flex;align-items:center;padding:5px 9px;border-radius:20px;font-size:10px;font-weight:850;white-space:nowrap;letter-spacing:.1px}.ok{background:var(--greenbg);color:var(--green)}.wait{background:var(--orangebg);color:var(--orange)}.expired{background:var(--redbg);color:var(--red)}.neutral{background:#eef1f6;color:#5d687a}
-.rowbtn{padding:7px 11px;font-size:11px;border-radius:7px}.empty{text-align:center;color:var(--muted);padding:42px 10px!important;background:#fff!important}.notice{margin-top:14px;padding:12px 14px;background:#fff;border:1px solid var(--line);color:#657087;border-radius:10px;font-size:12px}.notice strong{color:#34415a}
+.rowbtn{padding:7px 11px;font-size:11px;border-radius:7px}.deadline{display:inline-flex;align-items:center;padding:5px 9px;border-radius:20px;font-size:11px;font-weight:800;white-space:nowrap}.deadline.safe{background:var(--greenbg);color:var(--green)}.deadline.soon{background:var(--orangebg);color:var(--orange)}.deadline.today,.deadline.overdue{background:var(--redbg);color:var(--red)}.deadline.none{background:#eef1f6;color:#5d687a}.empty{text-align:center;color:var(--muted);padding:42px 10px!important;background:#fff!important}.notice{margin-top:14px;padding:12px 14px;background:#fff;border:1px solid var(--line);color:#657087;border-radius:10px;font-size:12px}.notice strong{color:#34415a}
 .statusline{font-size:11px;color:var(--muted);padding:10px 18px;border-top:1px solid #f0f2f6}.error{color:var(--red)}.success{color:var(--green)}
 dialog{border:0;border-radius:15px;padding:0;width:min(460px,calc(100% - 28px));box-shadow:0 25px 80px #11182744}dialog::backdrop{background:#101a3277}.modal{padding:21px}.modal h2{margin:0 0 5px;font-size:19px}.modal p{margin:0 0 17px;color:var(--muted);font-size:13px}.field{display:grid;gap:6px;margin:13px 0}.field label{font-weight:750;font-size:12px}.field input,.field select{width:100%;padding:10px}.modalfoot{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
 @media(max-width:950px){.stats{grid-template-columns:repeat(3,minmax(0,1fr))}}
@@ -301,6 +301,15 @@ function planStatus(p){
  if(p.mode==='vip')return p.due<today?'Vencido':p.paid?'Pago':'Aguardando pagamento';
  return 'Sem plano';
 }
+function deadlineInfo(p){
+ const due=p?.mode==='test'?p.end:p?.mode==='vip'?p.due:null;
+ if(!due)return '<span class="deadline none">—</span>';
+ const today=dateLocal();
+ const days=Math.round((Date.parse(due+'T00:00:00Z')-Date.parse(today+'T00:00:00Z'))/86400000);
+ if(days<0){const n=Math.abs(days);return `<span class="deadline overdue">Vencida há ${n} dia(s)</span>`}
+ if(days===0)return '<span class="deadline today">Vence hoje</span>';
+ return `<span class="deadline ${days<=7?'soon':'safe'}">${days} dia(s) restantes</span>`;
+}
 function statusClass(s){return s==='Vencido'?'expired':s==='Pago'||s==='Em teste'?'ok':s==='Agendado'||s==='Aguardando pagamento'?'wait':'neutral'}
 function counts(){
  const vals=Object.values(plans);
@@ -339,7 +348,7 @@ function render(){
  const q=$('search').value.trim().toLowerCase();
  let rows=stores.filter(s=>currentTab==='all'||plans[String(s.id)]?.mode===currentTab)
  .filter(s=>[s.id,storeName(s),phone(s)].join(' ').toLowerCase().includes(q));
- let headers=currentTab==='all'?['ID','Estabelecimento','WhatsApp','Data atual','Plano','Situação','Gerenciar']:currentTab==='test'?['ID','Estabelecimento','WhatsApp','Data atual','Início do teste','Fim do teste','Status','Ações']:['ID','Estabelecimento','WhatsApp','Data atual','Categoria VIP','Vencimento','Último pagamento','Status','Ações'];
+ let headers=currentTab==='all'?['ID','Estabelecimento','WhatsApp','Data atual','Plano','Situação','Dias para vencer','Gerenciar']:currentTab==='test'?['ID','Estabelecimento','WhatsApp','Data atual','Início do teste','Fim do teste','Dias para vencer','Status','Ações']:['ID','Estabelecimento','WhatsApp','Data atual','Categoria VIP','Vencimento','Dias para vencer','Último pagamento','Status','Ações'];
  const totalRows=rows.length, totalPages=Math.max(1,Math.ceil(totalRows/pageSize));
  currentPage=Math.min(currentPage,totalPages);
  const firstIndex=totalRows?(currentPage-1)*pageSize+1:0, lastIndex=Math.min(currentPage*pageSize,totalRows);
@@ -349,9 +358,9 @@ function render(){
  $('tbody').innerHTML=pageRows.map(s=>{
   const p=plans[String(s.id)], st=p?planStatus(p):'Sem plano', badge=`<span class="badge ${statusClass(st)}">${esc(st)}</span>`;
   const base=`<td class="id">#${esc(s.id)}</td><td><div class="store">${esc(storeName(s))}</div></td><td>${esc(phone(s))}</td><td>${fmt(dateLocal())}</td>`;
-  if(currentTab==='all')return `<tr>${base}<td><select class="mode" aria-label="Plano da loja" ${!isAdmin?'disabled':''} onchange="choosePlan('${esc(s.id)}',this.value)"><option value="">Selecionar plano</option><option value="test" ${p?.mode==='test'?'selected':''}>Teste</option><option value="vip" ${p?.mode==='vip'?'selected':''}>VIP</option></select></td><td>${badge}</td><td><button class="rowbtn secondary" ${!isAdmin?'disabled':''} onclick="editPlan('${esc(s.id)}')">Configurar</button></td></tr>`;
-  if(currentTab==='test')return `<tr>${base}<td>${fmt(p?.start)}</td><td>${fmt(p?.end)}</td><td>${badge}</td><td><div class="mini-actions"><button class="rowbtn secondary" ${!isAdmin?'disabled':''} onclick="extendTest('${esc(s.id)}')">Prorrogar</button><button class="rowbtn secondary" ${!isAdmin?'disabled':''} onclick="showHistory('${esc(s.id)}')">Histórico</button><button class="rowbtn secondary" ${!isAdmin?'disabled':''} onclick="editPlan('${esc(s.id)}')">Configurar</button></div></td></tr>`;
-  return `<tr>${base}<td>${p?.category==='promocional'?'VIP promocional':'VIP normal'}</td><td>${fmt(p?.due)}</td><td>${fmt(p?.paid)}</td><td>${badge}</td><td><div class="mini-actions"><button class="rowbtn" ${!isAdmin?'disabled':''} onclick="registerPayment('${esc(s.id)}')">Pagamento</button><button class="rowbtn secondary" ${!isAdmin?'disabled':''} onclick="showHistory('${esc(s.id)}')">Histórico</button><button class="rowbtn secondary" ${!isAdmin?'disabled':''} onclick="editPlan('${esc(s.id)}')">Configurar</button></div></td></tr>`;
+  if(currentTab==='all')return `<tr>${base}<td><select class="mode" aria-label="Plano da loja" ${!isAdmin?'disabled':''} onchange="choosePlan('${esc(s.id)}',this.value)"><option value="">Selecionar plano</option><option value="test" ${p?.mode==='test'?'selected':''}>Teste</option><option value="vip" ${p?.mode==='vip'?'selected':''}>VIP</option></select></td><td>${badge}</td><td>${deadlineInfo(p)}</td><td><button class="rowbtn secondary" ${!isAdmin?'disabled':''} onclick="editPlan('${esc(s.id)}')">Configurar</button></td></tr>`;
+  if(currentTab==='test')return `<tr>${base}<td>${fmt(p?.start)}</td><td>${fmt(p?.end)}</td><td>${deadlineInfo(p)}</td><td>${badge}</td><td><div class="mini-actions"><button class="rowbtn secondary" ${!isAdmin?'disabled':''} onclick="extendTest('${esc(s.id)}')">Prorrogar</button><button class="rowbtn secondary" ${!isAdmin?'disabled':''} onclick="showHistory('${esc(s.id)}')">Histórico</button><button class="rowbtn secondary" ${!isAdmin?'disabled':''} onclick="editPlan('${esc(s.id)}')">Configurar</button></div></td></tr>`;
+  return `<tr>${base}<td>${p?.category==='promocional'?'VIP promocional':'VIP normal'}</td><td>${fmt(p?.due)}</td><td>${deadlineInfo(p)}</td><td>${fmt(p?.paid)}</td><td>${badge}</td><td><div class="mini-actions"><button class="rowbtn" ${!isAdmin?'disabled':''} onclick="registerPayment('${esc(s.id)}')">Pagamento</button><button class="rowbtn secondary" ${!isAdmin?'disabled':''} onclick="showHistory('${esc(s.id)}')">Histórico</button><button class="rowbtn secondary" ${!isAdmin?'disabled':''} onclick="editPlan('${esc(s.id)}')">Configurar</button></div></td></tr>`;
  }).join('');
  renderPager(totalRows,totalPages,firstIndex,lastIndex);
 }
@@ -365,20 +374,19 @@ function renderPager(total,totalPages,first,last){
  $('nextPage').addEventListener('click',()=>{if(currentPage<totalPages){currentPage++;render();document.querySelector('.table-wrap').scrollTop=0}});
 }
 function exportCsv(){
- const headers=currentTab==='all'?['ID da loja','Nome da loja','WhatsApp','Plano','Situação','Início do teste','Fim do teste','Vencimento','Pagamento']:currentTab==='test'?['ID da loja','Nome da loja','WhatsApp','Início do teste','Fim do teste','Status']:['ID da loja','Nome da loja','WhatsApp','Categoria VIP','Vencimento','Pagamento','Status'];
+ const headers=currentTab==='all'?['ID da loja','Nome da loja','WhatsApp','Plano','Situação','Dias para vencer','Início do teste','Fim do teste','Vencimento','Pagamento']:currentTab==='test'?['ID da loja','Nome da loja','WhatsApp','Início do teste','Fim do teste','Dias para vencer','Status']:['ID da loja','Nome da loja','WhatsApp','Categoria VIP','Vencimento','Dias para vencer','Pagamento','Status'];
  const rows=stores.filter(s=>currentTab==='all'||plans[String(s.id)]?.mode===currentTab)
   .filter(s=>[s.id,storeName(s),phone(s)].join(' ').toLowerCase().includes($('search').value.trim().toLowerCase()))
-  .map(s=>{const p=plans[String(s.id)]||{};const common=[s.id,storeName(s),phone(s)];return currentTab==='all'?[...common,p.mode==='test'?'Teste':p.mode==='vip'?(p.category==='promocional'?'VIP promocional':'VIP normal'):'Sem plano',planStatus(p),p.start||'',p.end||'',p.due||'',p.paid||'']:currentTab==='test'?[...common,p.start||'',p.end||'',planStatus(p)]:[...common,p.category==='promocional'?'VIP promocional':'VIP normal',p.due||'',p.paid||'',planStatus(p)]});
+  .map(s=>{const p=plans[String(s.id)]||{};const common=[s.id,storeName(s),phone(s)];const due=p.mode==='test'?p.end:p.mode==='vip'?p.due:'';const today=dateLocal();const remaining=due?Math.round((Date.parse(due+'T00:00:00Z')-Date.parse(today+'T00:00:00Z'))/86400000):'';const deadline=remaining===''?'':remaining<0?`Vencida há ${Math.abs(remaining)} dia(s)`:remaining===0?'Vence hoje':`${remaining} dia(s) restantes`;return currentTab==='all'?[...common,p.mode==='test'?'Teste':p.mode==='vip'?(p.category==='promocional'?'VIP promocional':'VIP normal'):'Sem plano',planStatus(p),deadline,p.start||'',p.end||'',p.due||'',p.paid||'']:currentTab==='test'?[...common,p.start||'',p.end||'',deadline,planStatus(p)]:[...common,p.category==='promocional'?'VIP promocional':'VIP normal',p.due||'',deadline,p.paid||'',planStatus(p)]});
  const csv=[headers,...rows].map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(';')).join('\\r\\n');
  const blob=new Blob(['\\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`assinaturas-${currentTab}-${dateLocal()}.csv`;a.click();URL.revokeObjectURL(url);
 }
+async function fetchAllRows(queryFactory,batchSize=500){const rows=[];for(let from=0;;from+=batchSize){const {data,error}=await queryFactory().range(from,from+batchSize-1);if(error)throw error;const batch=data||[];rows.push(...batch);if(batch.length<batchSize)break;}return rows;}
 async function loadStores(){
  $('status').textContent='Carregando estabelecimentos do Supabase...';$('status').className='statusline';
  try{
-  const {data,error}=await sb.from('Lojas').select('*').order('id',{ascending:true});
-  if(error)throw error;
-  stores=data||[];
+  stores=await fetchAllRows(()=>sb.from('Lojas').select('*').order('id',{ascending:true}));
   await refreshAuthAndPlans();
   $('status').textContent=`${stores.length} loja(s) carregada(s). ${isAdmin?'Assinaturas sincronizadas com o Supabase.':'Entre como administrador para visualizar e gerenciar assinaturas.'}`;
   $('status').className='statusline '+(isAdmin?'success':'');
@@ -394,11 +402,9 @@ async function refreshAuthAndPlans(){
  isAdmin=allowed===true;
  if(!isAdmin)return;
  await loadVipSettings();
- const {data,error}=await sb.from('assinaturas_lojas').select('*');
- if(error)throw error;
- (data||[]).forEach(row=>{plans[String(row.loja_id)]=fromDb(row)});
-  const hist=await sb.from('historico_assinaturas').select('*').order('criado_em',{ascending:false});
-  if(hist.error)throw hist.error;historyRows=hist.data||[];
+ const data=await fetchAllRows(()=>sb.from('assinaturas_lojas').select('*').order('loja_id'));
+ data.forEach(row=>{plans[String(row.loja_id)]=fromDb(row)});
+  historyRows=await fetchAllRows(()=>sb.from('historico_assinaturas').select('*').order('criado_em',{ascending:false}));
 }
 function updateAuthUi(){
  $('authLabel').textContent=currentUser?(isAdmin?'● Administrador conectado':'● Usuário sem permissão'):'● Supabase conectado';

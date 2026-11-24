@@ -400,12 +400,11 @@ function exportCsv(){
  const blob=new Blob(['\\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`assinaturas-${currentTab}-${dateLocal()}.csv`;a.click();URL.revokeObjectURL(url);
 }
+async function fetchAllRows(queryFactory,batchSize=500){const rows=[];for(let from=0;;from+=batchSize){const {data,error}=await queryFactory().range(from,from+batchSize-1);if(error)throw error;const batch=data||[];rows.push(...batch);if(batch.length<batchSize)break;}return rows;}
 async function loadStores(){
  $('status').textContent='Carregando estabelecimentos do Supabase...';$('status').className='statusline';
  try{
-  const {data,error}=await sb.from('Lojas').select('*').order('id',{ascending:true});
-  if(error)throw error;
-  stores=data||[];
+  stores=await fetchAllRows(()=>sb.from('Lojas').select('*').order('id',{ascending:true}));
   await refreshAuthAndPlans();
   $('status').textContent=`${stores.length} loja(s) carregada(s). ${isAdmin?'Assinaturas sincronizadas com o Supabase.':'Entre como administrador para visualizar e gerenciar assinaturas.'}`;
   $('status').className='statusline '+(isAdmin?'success':'');
@@ -420,11 +419,9 @@ async function refreshAuthAndPlans(){
  if(adminError)throw adminError;
  isAdmin=allowed===true;
  if(!isAdmin)return;
- const {data,error}=await sb.from('assinaturas_lojas').select('*');
- if(error)throw error;
- (data||[]).forEach(row=>{plans[String(row.loja_id)]=fromDb(row)});
-  const hist=await sb.from('historico_assinaturas').select('*').order('criado_em',{ascending:false});
-  if(hist.error)throw hist.error;historyRows=hist.data||[];
+ const data=await fetchAllRows(()=>sb.from('assinaturas_lojas').select('*').order('loja_id'));
+ data.forEach(row=>{plans[String(row.loja_id)]=fromDb(row)});
+  historyRows=await fetchAllRows(()=>sb.from('historico_assinaturas').select('*').order('criado_em',{ascending:false}));
 }
 function updateAuthUi(){
  $('authLabel').textContent=currentUser?(isAdmin?'● Administrador conectado':'● Usuário sem permissão'):'● Supabase conectado';
