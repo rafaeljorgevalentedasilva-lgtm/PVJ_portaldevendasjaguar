@@ -2153,11 +2153,53 @@ async function admin(refresh=false){
 async function loadAdminStores(page=1){
  adminPage=Math.max(1,page);const list=document.getElementById('admin-store-list'),pager=document.getElementById('admin-store-pagination');if(list)list.innerHTML='<div class="admin-empty">Carregando lojas…</div>';
  try{let q=sb.from('Lojas').select('id,nome,categoria,imagem_card',{count:'exact'});if(adminSearchTerm)q=q.ilike('nome',`%${adminSearchTerm.replace(/[%,()]/g,' ')}%`);const {data,error,count}=await q.order('nome',{ascending:true}).order('id',{ascending:true}).range((adminPage-1)*ADMIN_PAGE_SIZE,adminPage*ADMIN_PAGE_SIZE-1);if(error)throw error;adminTotal=Number(count||0);const rows=data||[];if(!rows.length&&adminPage>1){return await loadAdminStores(adminPage-1);}
-  if(list)list.innerHTML=rows.map(l=>`<article class="lr admin-store-row"><img class="admin-store-thumb" src="${esc(l.imagem_card||'')}" loading="lazy" alt="Imagem de ${esc(l.nome)}" onerror="this.classList.add('is-empty');this.removeAttribute('src')"><div class="admin-store-main"><b class="admin-store-name" title="${esc(l.nome)}">${esc(l.nome)}</b><small class="admin-store-category">${esc(l.categoria||'Sem categoria')}</small><div class="admin-store-stats"><div class="admin-store-stat"><b data-stat-access="${l.id}">—</b><span>Acessos</span></div><div class="admin-store-stat"><b data-stat-chat="${l.id}">—</b><span>WhatsApp</span></div></div><div class="admin-store-actions"><button class="btn s ibtn" onclick="go('edit-${l.id}')" aria-label="Editar ${esc(l.nome)}" title="Editar loja"><span class="ic ic-editar" aria-hidden="true"></span><span>Editar</span></button><button class="btn d ibtn" onclick="delLoja(${l.id})" aria-label="Excluir ${esc(l.nome)}" title="Excluir loja"><span class="ic ic-deletar" aria-hidden="true"></span><span>Excluir</span></button></div></div></article>`).join('')||'<div class="admin-empty">Nenhuma loja encontrada.</div>';
+  if(list)list.innerHTML=rows.map(l=>`<article class="lr admin-store-row"><div class="admin-store-main"><b class="admin-store-name" title="${esc(l.nome)}">${esc(l.nome)}</b><div class="admin-store-actions"><button type="button" class="admin-indicator-toggle" onclick="toggleAdminIndicators(${l.id},event)" aria-label="Ver indicadores de ${esc(l.nome)}" title="Ver indicadores"><span aria-hidden="true">▥</span></button><button class="btn s ibtn" onclick="go('edit-${l.id}')" aria-label="Editar ${esc(l.nome)}" title="Editar loja"><span class="ic ic-editar" aria-hidden="true"></span><span>Editar</span></button><button class="btn d ibtn" onclick="delLoja(${l.id})" aria-label="Excluir ${esc(l.nome)}" title="Excluir loja"><span class="ic ic-deletar" aria-hidden="true"></span><span>Excluir</span></button></div><div class="admin-indicator-popup" id="admin-indicators-${l.id}" hidden><div><b data-stat-access="${l.id}">—</b><span>Acessos</span></div><div><b data-stat-chat="${l.id}">—</b><span>WhatsApp</span></div></div></div></article>`).join('')||'<div class="admin-empty">Nenhuma loja encontrada.</div>';
   const pages=Math.max(1,Math.ceil(adminTotal/ADMIN_PAGE_SIZE));if(pager)pager.innerHTML=`<span>${adminTotal.toLocaleString('pt-BR')} loja(s) · Página ${adminPage} de ${pages}</span>${pages>1?`<button class="btn s" ${adminPage===1?'disabled':''} onclick="changeAdminPage(${adminPage-1})">Anterior</button><button class="btn s" ${adminPage===pages?'disabled':''} onclick="changeAdminPage(${adminPage+1})">Próxima</button>`:''}`;
   const ids=rows.map(x=>Number(x.id));if(ids.length){const {data:stats,error:statsError}=await sb.rpc('estatisticas_lojas_por_ids',{p_loja_ids:ids});if(statsError)console.warn('Indicadores administrativos indisponíveis:',statsError);else(stats||[]).forEach(x=>{const a=document.querySelector(`[data-stat-access=\"${x.loja_id}\"]`),c=document.querySelector(`[data-stat-chat=\"${x.loja_id}\"]`);if(a)a.textContent=Number(x.acessos||0).toLocaleString('pt-BR');if(c)c.textContent=Number(x.conversas||0).toLocaleString('pt-BR')});}
  }catch(e){console.error('Falha ao carregar lojas administrativas:',e);if(list)list.innerHTML='<div class="admin-empty">Não foi possível carregar as lojas. Tente novamente.</div>';if(pager)pager.innerHTML='<button class="btn s" onclick="loadAdminStores(adminPage)">Tentar novamente</button>'; }
 }
+function fecharAdminIndicatorPopups(){
+ document.querySelectorAll('.admin-indicator-popup').forEach(popup=>{
+  popup.hidden=true;
+  popup.style.position='';popup.style.left='';popup.style.top='';popup.style.right='';popup.style.zIndex='';
+  const main=popup.__adminHome;
+  if(main && popup.parentElement===document.body)main.appendChild(popup);
+ });
+}
+function toggleAdminIndicators(id,event){
+ if(event){event.preventDefault();event.stopPropagation();}
+ const popup=document.getElementById(`admin-indicators-${id}`);if(!popup)return;
+ const button=event?.currentTarget;
+ const willOpen=popup.hidden;
+ fecharAdminIndicatorPopups();
+ if(!willOpen||!button)return;
+ // Retira o popup da área rolável e o posiciona sobre a página, sem ser recortado por cards ou containers.
+ popup.__adminHome=button.closest('.admin-store-main');
+ document.body.appendChild(popup);
+ popup.hidden=false;
+ popup.style.setProperty('position','fixed','important');
+ popup.style.setProperty('z-index','10000','important');
+ popup.style.setProperty('display','flex','important');
+ popup.style.setProperty('width','min(230px, calc(100vw - 24px))','important');
+ popup.style.setProperty('min-width','190px','important');
+ popup.style.setProperty('box-sizing','border-box','important');
+ popup.style.setProperty('right','auto','important');
+ const anchor=button.getBoundingClientRect();
+ const width=Math.min(230,window.innerWidth-24);
+ const height=popup.getBoundingClientRect().height||76;
+ let left=Math.min(Math.max(12,anchor.right-width),window.innerWidth-width-12);
+ let top=anchor.bottom+8;
+ if(top+height>window.innerHeight-12)top=Math.max(12,anchor.top-height-8);
+ popup.style.setProperty('left',`${left}px`,'important');
+ popup.style.setProperty('top',`${top}px`,'important');
+}
+document.addEventListener('click',event=>{
+ if(event.target.closest('.admin-indicator-toggle')||event.target.closest('.admin-indicator-popup'))return;
+ fecharAdminIndicatorPopups();
+});
+document.addEventListener('keydown',event=>{if(event.key==='Escape')fecharAdminIndicatorPopups()});
+window.addEventListener('resize',fecharAdminIndicatorPopups);
+window.addEventListener('scroll',fecharAdminIndicatorPopups,true);
 function changeAdminPage(n){loadAdminStores(n);}
 function filterAdminStores(){clearTimeout(adminSearchTimer);adminSearchTimer=setTimeout(()=>{adminSearchTerm=(document.getElementById('admin-store-search')?.value||'').trim();loadAdminStores(1)},250);}
 async function sair(){const {error}=await sb.auth.signOut();if(error){alert('Não foi possível sair da conta: '+error.message);return}user=null;go('')}
@@ -2236,7 +2278,125 @@ init();
 .universal-benefit-content ul{margin:0;padding:0;list-style:none;display:grid;gap:6px}
 .universal-benefit-content li{color:#344b40;font-size:12px;line-height:1.5}
 @media(max-width:620px){.universal-benefit{gap:12px;padding:16px}.universal-benefit-icon{flex-basis:42px;width:42px;height:42px;font-size:24px}}
-</style></body></html>
+</style>
+<style id="ajuste-cards-lojas-cadastradas">
+/* Ajuste exclusivo dos cards: preserva integralmente os ícones e estilos originais. */
+#admin-store-list.admin-scroll{
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  align-items:stretch!important;
+  gap:8px!important;
+  max-height:min(68vh,620px)!important;
+  padding:3px!important;
+}
+#admin-store-list .admin-store-row{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:stretch!important;
+  justify-content:flex-start!important;
+  gap:6px!important;
+  min-width:0!important;
+  min-height:0!important;
+  height:auto!important;
+  aspect-ratio:auto!important;
+  padding:7px!important;
+  border:1px solid var(--bd)!important;
+  border-radius:10px!important;
+  background:var(--card)!important;
+}
+#admin-store-list .admin-store-thumb{
+  display:block!important;
+  width:100%!important;
+  height:66px!important;
+  min-height:66px!important;
+  flex:0 0 66px!important;
+  object-fit:contain!important;
+  object-position:center!important;
+  border-radius:7px!important;
+  background:var(--surface-soft,#f5f7f2)!important;
+}
+#admin-store-list .admin-store-main{
+  display:flex!important;
+  flex:1 1 auto!important;
+  flex-direction:column!important;
+  justify-content:flex-start!important;
+  gap:4px!important;
+  width:100%!important;
+  min-width:0!important;
+  min-height:0!important;
+}
+#admin-store-list .admin-store-name{
+  display:-webkit-box!important;
+  overflow:hidden!important;
+  color:var(--tx)!important;
+  font-size:11px!important;
+  font-weight:750!important;
+  line-height:1.25!important;
+  white-space:normal!important;
+  overflow-wrap:anywhere!important;
+  -webkit-box-orient:vertical!important;
+  -webkit-line-clamp:2!important;
+  min-height:2.5em!important;
+  text-overflow:ellipsis!important;
+}
+#admin-store-list .admin-store-category{
+  display:block!important;
+  color:var(--mu)!important;
+  font-size:9px!important;
+  line-height:1.2!important;
+  white-space:normal!important;
+  overflow-wrap:anywhere!important;
+}
+#admin-store-list .admin-store-stats{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:4px!important;
+  margin-top:2px!important;
+}
+#admin-store-list .admin-store-stat{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:2px!important;
+  min-width:0!important;
+  padding:4px 2px!important;
+  border-radius:6px!important;
+  background:var(--surface-soft,#f5f7f2)!important;
+  color:var(--mu)!important;
+  font-size:8px!important;
+  line-height:1.15!important;
+  text-align:center!important;
+}
+#admin-store-list .admin-store-stat b{
+  color:var(--tx)!important;
+  font-size:11px!important;
+}
+#admin-store-list .admin-store-actions{
+  display:flex!important;
+  gap:4px!important;
+  margin-top:2px!important;
+}
+#admin-store-list .admin-store-actions .btn{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  flex:1 1 0!important;
+  min-width:0!important;
+  min-height:29px!important;
+  padding:4px 2px!important;
+  border-radius:7px!important;
+  font-size:9px!important;
+  line-height:1.1!important;
+}
+@media(max-width:360px){
+  #admin-store-list.admin-scroll{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  #admin-store-list .admin-store-thumb{height:76px!important;flex-basis:76px!important}
+  #admin-store-list .admin-store-name{font-size:12px!important}
+  #admin-store-list .admin-store-actions .btn{font-size:10px!important}
+}
+</style>
+
+</body></html>
 <style id="logo-oficial-enviada">
 .municipal-header .brand-lockup-banner>img{
   width:100%!important;
@@ -2362,3 +2522,56 @@ init();
 @media(prefers-reduced-motion:reduce){.plans-page *{transition:none!important;scroll-behavior:auto!important}}
 </style>
 
+<style id="admin-cards-ajustados-2026">
+/* Categorias: espaço interno suficiente para o botão de exclusão não ser recortado. */
+#admin-cat-list.admin-scroll{overflow-x:visible!important;overflow-y:auto!important;padding:6px 8px 8px!important;gap:9px!important;grid-auto-rows:minmax(88px,auto)!important;}
+#admin-cat-list .lr{box-sizing:border-box!important;min-width:0!important;min-height:88px!important;height:auto!important;padding:9px!important;overflow:visible!important;grid-template-columns:minmax(0,1fr) 38px!important;gap:7px!important;}
+#admin-cat-list .lr .g{min-width:0!important;overflow-wrap:anywhere!important;}
+#admin-cat-list .lr .btn{width:38px!important;min-width:38px!important;min-height:38px!important;flex:0 0 38px!important;justify-self:center!important;padding:5px!important;}
+@media(max-width:600px){
+ #admin-cat-list.admin-scroll{grid-template-columns:repeat(3,minmax(0,1fr))!important;padding:6px 7px 9px!important;grid-auto-rows:94px!important;}
+ #admin-cat-list .lr{height:94px!important;min-height:94px!important;padding:7px 5px!important;overflow:visible!important;}
+ #admin-cat-list .lr .btn{align-self:center!important;width:36px!important;min-width:36px!important;min-height:36px!important;flex:0 0 36px!important;}
+}
+/* Lojas: linha enxuta com apenas nome e ações; indicadores aparecem sob demanda. */
+#admin-store-list.admin-scroll{grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr))!important;gap:8px!important;padding:5px!important;}
+#admin-store-list .admin-store-row{position:relative!important;display:flex!important;flex-direction:row!important;align-items:center!important;min-width:0!important;min-height:0!important;height:auto!important;padding:9px 10px!important;gap:8px!important;overflow:visible!important;}
+#admin-store-list .admin-store-main{position:relative!important;display:flex!important;flex:1 1 auto!important;flex-direction:row!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;width:100%!important;min-width:0!important;}
+#admin-store-list .admin-store-name{flex:1 1 auto!important;min-width:0!important;min-height:0!important;display:block!important;font-size:12px!important;line-height:1.3!important;white-space:normal!important;overflow-wrap:anywhere!important;}
+#admin-store-list .admin-store-actions{display:flex!important;flex:0 0 auto!important;align-items:center!important;gap:5px!important;margin:0!important;}
+#admin-store-list .admin-store-actions .btn{flex:0 0 auto!important;min-width:34px!important;width:auto!important;min-height:34px!important;padding:5px 7px!important;font-size:10px!important;}
+#admin-store-list .admin-indicator-toggle{display:inline-grid!important;place-items:center!important;flex:0 0 30px!important;width:30px!important;height:30px!important;min-height:30px!important;padding:0!important;border:1px solid var(--bd)!important;border-radius:8px!important;background:var(--bg)!important;color:var(--mu)!important;font-size:17px!important;cursor:pointer!important;}
+#admin-store-list .admin-indicator-toggle:hover{color:var(--o1)!important;border-color:var(--o1)!important;}
+#admin-store-list .admin-indicator-popup{position:absolute!important;z-index:20!important;right:0!important;top:calc(100% + 7px)!important;display:flex!important;gap:7px!important;min-width:190px!important;padding:9px!important;border:1px solid var(--bd)!important;border-radius:10px!important;background:var(--card)!important;box-shadow:0 8px 24px #0002!important;}
+#admin-store-list .admin-indicator-popup[hidden]{display:none!important;}
+#admin-store-list .admin-indicator-popup>div{display:flex!important;flex:1 1 0!important;flex-direction:column!important;align-items:center!important;gap:2px!important;padding:6px 8px!important;border-radius:7px!important;background:var(--bg)!important;color:var(--mu)!important;font-size:10px!important;}
+#admin-store-list .admin-indicator-popup b{color:var(--tx)!important;font-size:15px!important;}
+@media(max-width:600px){
+ #admin-store-list.admin-scroll{grid-template-columns:minmax(0,1fr)!important;gap:7px!important;}
+ #admin-store-list .admin-store-row{padding:8px 9px!important;}
+ #admin-store-list .admin-store-name{font-size:12px!important;}
+ #admin-store-list .admin-store-actions .btn{min-height:32px!important;padding:4px 6px!important;}
+}
+</style>
+
+
+<style id="admin-indicators-floating-popup">
+/* Indicadores em camada flutuante, fora da área rolável do painel. */
+.admin-indicator-popup{
+  position:fixed!important;z-index:10000!important;display:flex!important;gap:8px!important;
+  width:min(230px,calc(100vw - 24px))!important;min-width:190px!important;
+  box-sizing:border-box!important;padding:10px!important;margin:0!important;
+  border:1px solid var(--bd,#d9dfd9)!important;border-radius:11px!important;
+  background:var(--card,#fff)!important;color:var(--tx,#222)!important;
+  box-shadow:0 10px 30px rgba(0,0,0,.2)!important;
+}
+.admin-indicator-popup[hidden]{display:none!important;}
+.admin-indicator-popup>div{
+  display:flex!important;flex:1 1 0!important;min-width:0!important;flex-direction:column!important;
+  align-items:center!important;gap:3px!important;padding:7px 5px!important;
+  border-radius:8px!important;background:var(--bg,#f4f5f4)!important;
+  color:var(--mu,#555)!important;text-align:center!important;font-size:11px!important;
+}
+.admin-indicator-popup b{display:block!important;color:var(--tx,#222)!important;font-size:16px!important;line-height:1.3!important;opacity:1!important;visibility:visible!important;}
+.admin-indicator-popup span{display:block!important;color:var(--mu,#555)!important;font-size:11px!important;line-height:1.3!important;opacity:1!important;visibility:visible!important;}
+</style>
